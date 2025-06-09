@@ -3,12 +3,13 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
-  "scripts": {
-    "dev": "concurrently \"vite\" \"npx @tailwindcss/cli -i ./src/input.css -o ./dist/output.css --watch\"",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
+ "scripts": {
+  "dev": "concurrently \"vite\" \"npx tailwindcss -i ./src/input.css -o ./dist/output.css --watch\"",
+  "build": "vite build",
+  "preview": "vite preview",
+  "lint": "eslint ."
+},
+
   "dependencies": {
     "@reduxjs/toolkit": "^2.8.2",
     "@tailwindcss/cli": "^4.1.8",

@@ -19,6 +19,7 @@ const fetchCurrentWeather =createAsyncThunk(
 const initialState = {
   current: {},
   location: {},
+ 
   isLoading: false,
   error: null
 }
@@ -37,6 +38,8 @@ const WeatherCurrentSlice = createSlice({
         state.isLoading = false;
         state.current = action.payload.current;
         state.location = action.payload.location;
+        
+
       })
       .addCase(fetchCurrentWeather.rejected, (state, action) => {
         state.isLoading = false;

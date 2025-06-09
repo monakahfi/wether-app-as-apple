@@ -6,9 +6,7 @@ const fetchForeCastWeather = createAsyncThunk(
   async (cityName, thunkAPI) => {
     try {
       const key = "207d4477b43c4ed78ff103733250306";
-      const response = await axios.get(
-        `${import.meta.env.VITE_BASE_URL}forecast.json?key=${key}&q=${cityName}&days=10&aqi=yes&alerts=yes`
-      );
+      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}forecast.json?key=${key}&q=${cityName}&days=10&aqi=yes&alerts=yes`);
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(
@@ -23,6 +21,9 @@ const initialState = {
   current: {},
   forecast: {
     forecastday: []
+  },
+  alerts:{
+    alert:[]
   },
  
   isLoading: false,
@@ -44,6 +45,8 @@ const forecastWeatherSlice = createSlice({
   state.current = action.payload.current;
   state.location = action.payload.location;
   state.forecast= action.payload.forecast; 
+  state.alerts = action.payload.alerts?.alert || [];
+
 })
       .addCase(fetchForeCastWeather.rejected, (state, action) => {
         state.isLoading = false;
