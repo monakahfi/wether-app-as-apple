@@ -9,6 +9,7 @@ const fetchCurrentWeather =createAsyncThunk(
    try{
     const key="207d4477b43c4ed78ff103733250306";
      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}current.json?key=${key}&q=${cityName}&aqi=yes`);
+     console.log("Weather Data:", response);
      return response.data;
   }catch(error){
    return thunkAPI.rejectWithValue(error.response?.data?.error || error.message)
@@ -19,7 +20,6 @@ const fetchCurrentWeather =createAsyncThunk(
 const initialState = {
   current: {},
   location: {},
- 
   isLoading: false,
   error: null
 }
