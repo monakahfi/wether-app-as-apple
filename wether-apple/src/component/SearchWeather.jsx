@@ -27,51 +27,44 @@ function SearchWeather() {
      useEffect(() => {
     setWeatherCards(getCityCookies().map((city)=>({city, data:null})));
   }, []);
-//  useEffect(() => {
-//   console.log([ search,currentWeather, geoWeather])
-//     if (search && currentWeather) {
-//       setWeatherCards((prev) => {
-//         const exists = prev.find((card) => card.city === search);
-//         if (!exists) {
-//           return [...prev, { city: search, data: currentWeather }];
-//         }
-//         return [...prev]; 
-        
-      
-//       });
-   
-//       setCityCookie(search);
-      
-//     } else if (!search && geoWeather) {
-      
-//       setWeatherCards((prev) => {
-       
-//         const exists = prev.find((card) => card.city === "Geo");
-//         if (!exists) {
-//           return [...prev, { city: "Geo", data: geoWeather }];
-//         }
-//        return [...prev]; 
-//     });
-    
-//     }
-   
-//   }, [ search,currentWeather, geoWeather]);
- useEffect(() => {
-    console.log([search, currentWeather, geoWeather]);
-    if (search && currentWeather) {
-      setWeatherCards((prev) => [...prev, { city: search, data: currentWeather }]);
-      setCityCookie(search);
-    } else if (!search && geoWeather) {
-      setWeatherCards((prev) => [...prev, { city: "Geo", data: geoWeather }]);
-    }
-  }, [search, currentWeather, geoWeather]);
+
+useEffect(() => {
+  if (search && currentWeather) {
+    setWeatherCards((prev) => {
+      const exists = prev.find((card) => card.city === search);
+
+      if (exists) {
+        // فقط داده‌ی شهر موجود رو آپدیت کن
+        return prev.map((card) =>
+          card.city === search ? { ...card, data: currentWeather } : card
+        );
+      } else {
+        // اگه وجود نداشت، اضافه‌اش کن
+        setCityCookie(search);
+        return [...prev, { city: search, data: currentWeather }];
+      }
+    });
+  } else if (!search && geoWeather) {
+    setWeatherCards((prev) => {
+      const exists = prev.find((card) => card.city === "Geo");
+      if (exists) {
+        return prev.map((card) =>
+          card.city === "Geo" ? { ...card, data: geoWeather } : card
+        );
+      } else {
+        return [...prev, { city: "Geo", data: geoWeather }];
+      }
+    });
+  }
+}, [search, currentWeather, geoWeather]);
+
   const clickHandler = () => {
     const trimCity = city.trim(); 
     setSearch(trimCity);
 
     if (trimCity) {
-      setCityCookie(trimCity);
       dispatch(fetchCurrentWeather(trimCity));
+      setCityCookie(trimCity);
     } else {
       dispatch(fetchGeoWeather());
     }
@@ -79,11 +72,11 @@ function SearchWeather() {
   };
 
   return (
-    <div className="w-[375px] h-[812px] bg-black absolute flex flex-col items-center p-4">
+    <div className="w-[375px] h-[812px] bg-black absolute flex flex-col items-center p-4 ">
       <div className="w-full flex flex-col gap-4">
-        <CgMenuRound className="w-8 h-8 text-white" />
-        <p className="font-bold text-white text-xl">Weather</p>
-        <div className="flex m-2 ">
+        <CgMenuRound className="w-[29px] h-[29px] text-white items-start" />
+        <p className="font-bold text-white text-xl items-end">Weather</p>
+        <div className="flex m-2 gap-2">
         <input
           type="text"
           value={city}
@@ -95,45 +88,33 @@ function SearchWeather() {
           }}
         />
 
-        <button onClick={clickHandler} className="text-white self-end">
+        <button onClick={clickHandler} className="text-white w-[39px] h-[39px] self-end">
           <FaSearchMinus />
         </button>
          </div>
       
-        {/* <div className="mt-0 w-full flex flex-col gap-4">
+        
+         <div className="mt-0 w-full flex flex-col gap-4 overflow-y-auto">
           {weatherCards.map((card, index) =>
-            card.data ? (
-              <Current
-                key={index}
-                data={card.data}
-                isLoading={card.city === search ? currentLoading : null} // یا یه مقدار دیگه اگه جداگانه مدیریت می‌کنی
-                error={currentError}
-              />
-            ) : <GeoWeather
-              key={index}
-                data={card.data}
-                isLoading={card.city === search ?  geoLoading : null} // یا یه مقدار دیگه اگه جداگانه مدیریت می‌کنی
-                error={currentError}
-            />
-          )}
-        </div>
+  card.data ? (
+    card.city === "Geo" ? (
+      <GeoWeather
+        key={index}
+        data={card.data}
+        isLoading={geoLoading}
+        error={geoError}
+      />
+    ) : (
+      <Current
+        key={index}
+        data={card.data}
+        isLoading={currentLoading}
+        error={currentError}
+      />
+    )
+  ) : null
+)}
 
-        {search === "" ? (
-          <GeoWeather data={geoWeather} isLoading={geoLoading} error={geoError} />
-        ) : (
-          <Current data={currentWeather} isLoading={currentLoading} error={currentError} />
-        )} */}
-         <div className="mt-0 w-full flex flex-col gap-4">
-          {weatherCards.map((card, index) =>
-            card.data ? (
-              <Current
-                key={index}
-                data={card.data}
-                isLoading={card.city === search ? currentLoading : geoLoading}
-                error={currentError || geoError}
-              />
-            ) : null
-          )}
         </div>
       </div>
     </div>
