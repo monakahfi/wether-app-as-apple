@@ -1,22 +1,29 @@
 import Cookies from 'js-cookie';
 
-const setCityCookie = (city) => {
-  if (!city || city.trim() === '') return; // چک کردن شهر خالی
+const setCityCookie = (name, tz_id) => {
+  if (!name || !tz_id) return;
+
   const cities = getCityCookies();
-  if (!cities.includes(city.trim())) {
-    cities.push(city.trim());
-    Cookies.set('searchedCities', JSON.stringify(cities), { expires: 3 });
+  const exists = cities.some((c) => c.name === name && c.tz_id === tz_id);
+
+  if (!exists) {
+    cities.push({ name, tz_id });
+    Cookies.set('searchedCities', JSON.stringify(cities), { expires: 7 });
   }
 };
 
 const getCityCookies = () => {
   const cities = Cookies.get('searchedCities');
-  return cities ? JSON.parse(cities) : [];
+  try {
+    return cities ? JSON.parse(cities) : [];
+  } catch (e) {
+    return [];
+  }
 };
 
-const removeCityCookie = (city) => {
-  const cities = getCityCookies().filter((c) => c !== city);
-  Cookies.set('searchedCities', JSON.stringify(cities), { expires: 3 });
+const removeCityCookie = (tz_id) => {
+  const cities = getCityCookies().filter((c) => c.tz_id !== tz_id);
+  Cookies.set('searchedCities', JSON.stringify(cities), { expires: 7 });
 };
 
 export { setCityCookie, getCityCookies, removeCityCookie };

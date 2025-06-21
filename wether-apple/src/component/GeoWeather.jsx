@@ -1,4 +1,4 @@
-function GeoWeather({ data, isLoading, error }) {
+function GeoWeather({ data, isLoading, error,onClick }) {
   // مدیریت داده‌ها با مقدار پیش‌فرض
   const { location: loc = {}, current = {} } = data || {};
 
@@ -10,7 +10,7 @@ function GeoWeather({ data, isLoading, error }) {
   if (!loc.name) return null;
 
   return (
-    <div className="flex justify-between w-full bg-amber-600 p-4 mt-6 rounded-xl text-white">
+    <div className="flex justify-between w-full bg-amber-600 p-4 mt-6 rounded-xl text-white" onClick={onClick}>
       <div className="flex flex-col">
         <p className="font-bold">My Location</p>
         <p className="font-medium">{loc.name}</p>

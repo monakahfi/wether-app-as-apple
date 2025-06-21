@@ -1,6 +1,9 @@
-function Current({ data, isLoading, error }) {
+
+
+function Current({ data, isLoading, error,onClick }) {
   // مدیریت داده‌ها با مقدار پیش‌فرض
   const { location = {}, current = {} } = data || {};
+ 
 
   // اگه در حال بارگذاری یا خطا باشه، فقط اون رو نشون بده
   if (isLoading) return <p className="text-gray-400 mt-4">در حال بارگذاری...</p>;
@@ -10,9 +13,9 @@ function Current({ data, isLoading, error }) {
   if (!location.name) return null;
 
   return (
-    <div className="flex justify-between w-full bg-blue-600 p-4 mt-6 rounded-xl text-white">
+    <div className="flex justify-between w-full bg-blue-600 p-4 mt-6 rounded-2xl text-white ">
       <div className="flex flex-col">
-        <p className="font-bold">{location.country || "N/A"}</p>
+        <p className="font-bold" onClick={onClick}>{location.country || "N/A"}</p>
         <p className="font-medium">{location.name}</p>
         <p className="font-medium">{current.condition?.text || "N/A"}</p>
       </div>

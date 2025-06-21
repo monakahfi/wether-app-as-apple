@@ -7,57 +7,67 @@ import { fetchGeoWeather } from "../feature/LocationSlice";
 import { fetchCurrentWeather } from "../feature/CurrentWeatherSlice";
 import { FaSearchMinus } from "react-icons/fa";
 import { getCityCookies, setCityCookie } from "../cookie/Cookie";
+import { useNavigate } from "react-router-dom";
 
 
 function SearchWeather() {
   const dispatch = useDispatch();
+  const navigate = useNavigate()
   const [city, setCity] = useState("");
   const [search, setSearch] = useState("");
    const [weatherCards, setWeatherCards] = useState([]);
-     const {currentWeather,geoWeather , currentLoading , geoLoading , currentError , geoError} = useSelector((state)=>({
-   currentWeather : state.currentWeather ,
-    geoWeather: state.location ,
-    currentLoading :state.currentWeather.isLoading,
-    geoLoading : state.location.isLoading,
-    currentError :state.currentWeather.error,
-    geoError: state.location.error,
-  }));
-  console.log({currentWeather,geoWeather , currentLoading , geoLoading , currentError , geoError});
+ const currentWeather = useSelector((state) => state.currentWeather);
+const geoWeather = useSelector((state) => state.location);
+const currentLoading = useSelector((state) => state.currentWeather.isLoading);
+const geoLoading = useSelector((state) => state.location.isLoading);
+const currentError = useSelector((state) => state.currentWeather.error);
+const geoError = useSelector((state) => state.location.error);
 
-     useEffect(() => {
-    setWeatherCards(getCityCookies().map((city)=>({city, data:null})));
+  console.log({currentWeather,geoWeather , currentLoading , geoLoading , currentError , geoError});
+useEffect(() => {
+    setWeatherCards(
+      getCityCookies().map((city) => ({
+        city,
+        data: null,
+        tz_id: city === "Geo" ? "Geo" : null, // مقدار پیش‌فرض برای tz_id
+      }))
+    );
   }, []);
 
-useEffect(() => {
-  if (search && currentWeather) {
-    setWeatherCards((prev) => {
-      const exists = prev.find((card) => card.city === search);
-
-      if (exists) {
-        // فقط داده‌ی شهر موجود رو آپدیت کن
-        return prev.map((card) =>
-          card.city === search ? { ...card, data: currentWeather } : card
-        );
-      } else {
-        // اگه وجود نداشت، اضافه‌اش کن
-        setCityCookie(search);
-        return [...prev, { city: search, data: currentWeather }];
-      }
-    });
-  } else if (!search && geoWeather) {
-    setWeatherCards((prev) => {
-      const exists = prev.find((card) => card.city === "Geo");
-      if (exists) {
-        return prev.map((card) =>
-          card.city === "Geo" ? { ...card, data: geoWeather } : card
-        );
-      } else {
-        return [...prev, { city: "Geo", data: geoWeather }];
-      }
-    });
-  }
-}, [search, currentWeather, geoWeather]);
-
+// به‌روزرسانی weatherCards با داده‌های آب‌وهوا
+  useEffect(() => {
+    if (search && currentWeather) {
+      setWeatherCards((prev) => {
+        const exists = prev.find((card) => card.city === search);
+        if (exists) {
+          return prev.map((card) =>
+            card.city === search
+              ? { ...card, data: currentWeather, tz_id: currentWeather.location.tz_id }
+              : card
+          );
+        } else {
+          setCityCookie(search);
+          return [
+            ...prev,
+            { city: search, data: currentWeather, tz_id: currentWeather.location.tz_id },
+          ];
+        }
+      });
+    } else if (!search && geoWeather) {
+      setWeatherCards((prev) => {
+        const exists = prev.find((card) => card.city === "Geo");
+        if (exists) {
+          return prev.map((card) =>
+            card.city === "Geo"
+              ? { ...card, data: geoWeather, tz_id: geoWeather.location.tz_id }
+              : card
+          );
+        } else {
+          return [...prev, { city: "Geo", data: geoWeather, tz_id: geoWeather.location.tz_id }];
+        }
+      });
+    }
+  }, [search, currentWeather, geoWeather]);
   const clickHandler = () => {
     const trimCity = city.trim(); 
     setSearch(trimCity);
@@ -95,25 +105,29 @@ useEffect(() => {
       
         
          <div className="mt-0 w-full flex flex-col gap-4 overflow-y-auto">
-          {weatherCards.map((card, index) =>
-  card.data ? (
-    card.city === "Geo" ? (
-      <GeoWeather
-        key={index}
-        data={card.data}
-        isLoading={geoLoading}
-        error={geoError}
-      />
-    ) : (
-      <Current
-        key={index}
-        data={card.data}
-        isLoading={currentLoading}
-        error={currentError}
-      />
-    )
-  ) : null
-)}
+          // ... (بخش‌های قبلی کد بدون تغییر)
+
+{weatherCards.map((card) =>
+            card.data ? (
+              card.city === "Geo" ? (
+                <GeoWeather
+                  key={card.tz_id}
+                  data={card.data}
+                  isLoading={geoLoading}
+                  error={geoError}
+                  onClick={() => navigate(`/details/${encodeURIComponent(card.tz_id)}`)}
+                />
+              ) : (
+                <Current
+                  key={card.tz_id}
+                  data={card.data}
+                  isLoading={currentLoading}
+                  error={currentError}
+                  onClick={() => navigate(`/details/${encodeURIComponent(card.tz_id)}`)}
+                />
+              )
+            ) : null
+          )}
 
         </div>
       </div>
