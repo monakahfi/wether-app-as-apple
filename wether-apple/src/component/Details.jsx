@@ -1,84 +1,105 @@
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
-import { getCityCookies } from "../cookie/Cookie";
 import { useEffect, useState } from "react";
+
 import { fetchCurrentWeather } from "../feature/CurrentWeatherSlice";
 import { fetchGeoWeather } from "../feature/LocationSlice";
 import { fetchForeCastWeather } from "../feature/ForeCastSlice";
+import { getCityCookies } from "../cookie/Cookie";
+import Forcast from "./Forcast";
 
 function Details() {
   const { tz_id } = useParams();
-  const decodedTzId = decodeURIComponent(tz_id); // برای دیباگ و استفاده
+  const decodedTzId = decodeURIComponent(tz_id);
   const dispatch = useDispatch();
   const [place, setPlace] = useState(null);
 
-  const currentWeather = useSelector((state) => state.currentWeather);
-  const geoWeather = useSelector((state) => state.geoWeather);
-  const forecastData = useSelector((state) => state.forecastWeather);
+const currentWeather = useSelector((state) => state.currentWeather);
+const geoWeather = useSelector((state) => state.location);
+const forecastData = useSelector((state) => state.forecast);
 
-  const currentLoading = currentWeather.isLoading;
-  const geoLoading = geoWeather?.isLoading;
-  const currentError = currentWeather.error;
-  const geoError = geoWeather?.error;
-  const { isLoading, error } = forecastData;
+const currentLoading = useSelector((state) => state.currentWeather.isLoading);
+const geoLoading = useSelector((state) => state.location.isLoading);
+const forecastLoading = useSelector((state) => state.forecast.isLoading);
 
-  const cookie = getCityCookies();
-  console.log("cookie structure:", cookie); // برای دیباگ
+const currentError = useSelector((state) => state.currentWeather.error);
+const geoError = useSelector((state) => state.location.error);
+const forecastError = useSelector((state) => state.forecast.error);
 
-  // نگاشت tz_id به نام شهر با استفاده از داده‌های موجود
-  let cityName = null;
-  if (currentWeather.location && currentWeather.location.tz_id === decodedTzId) {
-    cityName = currentWeather.location.name;
-  } else if (geoWeather?.location && geoWeather.location.tz_id === decodedTzId) {
-    cityName = geoWeather.location.name;
-  } else {
-    const matchedCity = cookie.find((c) => c.tz_id === decodedTzId || c === "Geo");
-    cityName = matchedCity || (decodedTzId === "Geo" ? "Geo" : null);
-  }
 
   useEffect(() => {
-    if (!cityName) return;
-    setPlace(cityName);
+    const cookie = getCityCookies();
+    let name = null;
 
-    if (cityName === "Geo") {
+    // بررسی geo یا matchedCookie
+    const matchedCity = cookie.find(
+      (c) => typeof c === "object" && c.tz_id === decodedTzId
+    );
+
+    if (decodedTzId === "Geo") {
+      name = "Geo";
+    } else if (matchedCity) {
+      name = matchedCity.name;
+    }
+
+    if (!name) return;
+
+    setPlace(name);
+
+    if (name === "Geo") {
       dispatch(fetchGeoWeather());
-      dispatch(fetchForeCastWeather(cityName));
+      dispatch(fetchForeCastWeather("Geo"));
     } else {
-      dispatch(fetchCurrentWeather(cityName));
-      dispatch(fetchForeCastWeather(cityName));
+      dispatch(fetchCurrentWeather(name));
+      dispatch(fetchForeCastWeather(name));
     }
   }, [decodedTzId]);
 
-  const weatherData = cityName === "Geo" ? geoWeather : currentWeather;
+  // 🔍 بررسی اینکه geo valid هست یا نه
+  const isGeoValid =
+    decodedTzId === "Geo" && geoWeather.location?.tz_id === "Geo";
 
-  if (isLoading || currentLoading || geoLoading)
-    return <p className="text-gray-400 mt-4">در حال بارگذاری...</p>;
-  if (error || currentError || geoError)
-    return <p className="text-red-500 mt-4">خطا: {error || currentError || geoError}</p>;
-  if (!weatherData?.location)
-    return <p>داده‌های آب‌وهوا در دسترس نیست</p>;
+  const weatherData = isGeoValid ? geoWeather : currentWeather;
 
-  console.log("currentWeather:", currentWeather);
-  console.log("geoWeather:", geoWeather);
-  console.log("cityName:", cityName);
-  console.log("weatherData:", weatherData);
+if (
+  (!weatherData?.current || !forecastData?.forecast || !geoWeather.location) &&
+  !currentLoading &&
+  !geoLoading &&
+  !forecastLoading
+) {
+  return <p>داده‌های آب‌وهوا در دسترس نیست</p>;
+}
+
+  console.log({weatherData})
+  console.log({currentWeather})
 
   return (
-    <div className="container w-[375px] h-[812px] flex flex-col justify-between absolute items-center">
-      <div className="w-[375px] h-[195px] flex justify-center items-center shadow-2xl">
-        <p className="text-white items-center shadow-2xl font-light">
-          {weatherData?.location?.name === "Geo" ? "my location" : cityName}
-        </p>
-      </div>
-      {/* نمایش داده‌های آب‌وهوا برای دیباگ */}
-      <div className="text-white">
-        <p>Temp: {weatherData.current.temp_c}°C</p>
-        <p>Condition: {weatherData.current.condition?.text}</p>
-      </div>
+    <div className="w-[375px] h-[812px] flex flex-col items-center bg-black opacity-35 py-4 gap-4  ">
+      
+       {weatherData?.location && weatherData?.current && (
+      <div  className="w-[375px] h-[195px] text-white rounded-2xl p-4 shadow-3xl  shadow-white flex flex-col items-center gap-2">
+        
+          
+    <p className="w-[208px] h-[44px] text-7xl text-white font-bold items-center">{weatherData?.location?.name}</p>
+    <p className="w-[129px] h-[122px]  items-center font-bold ">{weatherData.current?.temp_c}°C</p>
+    <p className="w-[133px] h-[29px] items-center ">{weatherData.current?.condition?.text}</p> 
+       
+  </div>
+  )}
+
+{forecastData?.forecast?.forecastday?.length > 0 && (
+<div className='w-[375px]  h-[475px] flex flex-rew  items-center justify-center rounded-2xl box-border  text-white'>
+  <Forcast
+    data={forecastData}
+    isLoading={forecastLoading}
+    error={forecastError}
+  />
+</div>
+)}
     </div>
+
+
   );
 }
 
 export default Details;
-
-

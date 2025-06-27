@@ -24,15 +24,15 @@ const currentError = useSelector((state) => state.currentWeather.error);
 const geoError = useSelector((state) => state.location.error);
 
   console.log({currentWeather,geoWeather , currentLoading , geoLoading , currentError , geoError});
-useEffect(() => {
-    setWeatherCards(
-      getCityCookies().map((city) => ({
-        city,
-        data: null,
-        tz_id: city === "Geo" ? "Geo" : null, // مقدار پیش‌فرض برای tz_id
-      }))
-    );
-  }, []);
+// useEffect(() => {
+//     setWeatherCards(
+//       getCityCookies().map((city) => ({
+//         city,
+//         data: null,
+//         tz_id: city === "Geo" ? "Geo" : null, // مقدار پیش‌فرض برای tz_id
+//       }))
+//     );
+//   }, []);
 
 // به‌روزرسانی weatherCards با داده‌های آب‌وهوا
   useEffect(() => {
@@ -42,14 +42,14 @@ useEffect(() => {
         if (exists) {
           return prev.map((card) =>
             card.city === search
-              ? { ...card, data: currentWeather, tz_id: currentWeather.location.tz_id }
+              ? { ...card, data: currentWeather, tz_id: currentWeather.location?.tz_id }
               : card
           );
         } else {
           setCityCookie(search);
           return [
             ...prev,
-            { city: search, data: currentWeather, tz_id: currentWeather.location.tz_id },
+            { city: search, data: currentWeather, tz_id: currentWeather.location?.tz_id },
           ];
         }
       });
@@ -68,18 +68,50 @@ useEffect(() => {
       });
     }
   }, [search, currentWeather, geoWeather]);
-  const clickHandler = () => {
-    const trimCity = city.trim(); 
-    setSearch(trimCity);
+  // const clickHandler = (e) => {
+  //   const trimCity = city.trim(); 
+  //  e.preventDefualt();
+  //   setSearch(trimCity);
 
-    if (trimCity) {
-      dispatch(fetchCurrentWeather(trimCity));
+  //   if (trimCity) {
+  //     dispatch(fetchCurrentWeather(trimCity));
+  //     setCityCookie(trimCity);
+  //   } else {
+  //     dispatch(fetchGeoWeather());
+  //   }
+  //   setCity("");
+  // };
+const clickHandler = (e) => {
+  // e.preventDefault(); // اشتباهت اینجا بود نوشته بودی "e.preventDefualt()" غلط املایی بود 😅
+  const trimCity = city.trim();
+  if (!trimCity) {
+    dispatch(fetchGeoWeather());
+    // آپدیت کارت Geo
+    setWeatherCards((prev) => {
+      const exists = prev.find((card) => card.city === "Geo");
+      if (exists) return prev;
+      return [...prev, { city: "Geo", data: geoWeather, tz_id: geoWeather?.location?.tz_id }];
+    });
+  } else {
+    dispatch(fetchCurrentWeather(trimCity)).then((res) => {
+      const data = res.payload;
+      if (!data) return;
       setCityCookie(trimCity);
-    } else {
-      dispatch(fetchGeoWeather());
-    }
-    setCity("");
-  };
+      setWeatherCards((prev) => {
+        const exists = prev.find((card) => card.city === trimCity);
+        if (exists) {
+          return prev.map((card) =>
+            card.city === trimCity ? { ...card, data, tz_id: data.location.tz_id } : card
+          );
+        } else {
+          return [...prev, { city: trimCity, data, tz_id: data.location.tz_id }];
+        }
+      });
+    });
+  }
+
+  setCity("");
+};
 
   return (
     <div className="w-[375px] h-[812px] bg-black absolute flex flex-col items-center p-4 ">
@@ -108,7 +140,7 @@ useEffect(() => {
           // ... (بخش‌های قبلی کد بدون تغییر)
 
 {weatherCards.map((card) =>
-            card.data ? (
+            card.data  && card.tz_id ? (
               card.city === "Geo" ? (
                 <GeoWeather
                   key={card.tz_id}
