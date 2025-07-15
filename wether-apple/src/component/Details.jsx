@@ -8,9 +8,11 @@ import { fetchForeCastWeather } from "../feature/ForeCastSlice";
 import { getCityCookies } from "../cookie/Cookie";
 import Forcast from "./Forcast";
 
+import { IoCalendarOutline } from "react-icons/io5";
+
 function Details() {
   const { tz_id } = useParams();
-  const decodedTzId = decodeURIComponent(tz_id);
+  const decodedTzId = decodeURIComponent(tz_id.split("/")[1]);
   const dispatch = useDispatch();
   const [place, setPlace] = useState(null);
 
@@ -36,11 +38,13 @@ const forecastError = useSelector((state) => state.forecast.error);
       (c) => typeof c === "object" && c.tz_id === decodedTzId
     );
 
-    if (decodedTzId === "Geo") {
-      name = "Geo";
-    } else if (matchedCity) {
-      name = matchedCity.name;
-    }
+ if (decodedTzId === "Geo") {
+  name = "Geo";
+} else if (matchedCity) {
+  name = matchedCity.name;
+} else {
+  name = decodedTzId.split("/").pop().replace("_", " ");
+}
 
     if (!name) return;
 
@@ -53,6 +57,8 @@ const forecastError = useSelector((state) => state.forecast.error);
       dispatch(fetchCurrentWeather(name));
       dispatch(fetchForeCastWeather(name));
     }
+    console.log("👉 Requested forecast for:", name);
+
   }, [decodedTzId]);
 
   // 🔍 بررسی اینکه geo valid هست یا نه
@@ -72,30 +78,87 @@ if (
 
   console.log({weatherData})
   console.log({currentWeather})
+  console.log({forecastData})
+  console.log({decodedTzId})
 
   return (
-    <div className="w-[375px] h-[812px] flex flex-col items-center bg-black opacity-35 py-4 gap-4  ">
+    <div className="w-[375px] h-[812px] flex flex-col   items-center bg-black py-4 gap-4  ">
       
        {weatherData?.location && weatherData?.current && (
-      <div  className="w-[375px] h-[195px] text-white rounded-2xl p-4 shadow-3xl  shadow-white flex flex-col items-center gap-2">
+      <div  className="w-[375px] h-[195px] text-white rounded-2xl p-4 shadow-3xl justify-center  shadow-white flex flex-col items-center gap-2">
         
           
-    <p className="w-[208px] h-[44px] text-7xl text-white font-bold items-center">{weatherData?.location?.name}</p>
-    <p className="w-[129px] h-[122px]  items-center font-bold ">{weatherData.current?.temp_c}°C</p>
-    <p className="w-[133px] h-[29px] items-center ">{weatherData.current?.condition?.text}</p> 
+    <p className="  text-3xl text-white font-bold items-center">{weatherData?.location?.name}</p>
+    <p className="   items-center font-bold ">{weatherData.current?.temp_c}°C</p>
+    <p className=" items-center ">{weatherData.current?.condition?.text}</p> 
        
   </div>
   )}
-
+ {/* {!forecastData.alerts ?<p className="w-[30px] h-[20px] text-xs text-white ">
+        {forecastData.alerts?.alert}</p>:<p className="w-[30px] h-[20px] text-xs text-white ">no exist alert</p>} */}
 {forecastData?.forecast?.forecastday?.length > 0 && (
-<div className='w-[375px]  h-[475px] flex flex-rew  items-center justify-center rounded-2xl box-border  text-white'>
+<div className='w-[375px]  h-auto flex  items-center justify-center rounded-2xl box-border gap-2 text-white'>
+  
   <Forcast
+   
     data={forecastData}
     isLoading={forecastLoading}
     error={forecastError}
   />
 </div>
 )}
+ {/* <div className="flex w-[335px] h-[275px]  scroll-my-5 border-2 border-white">
+<p className=" font-bold text-white flex  border-b-white"><IoCalendarOutline /> 10-DAY  FORECAST</p>
+{forecastData.map((data)=>(
+  <p>{data?.forcast?.forecastday?.length < 3 &&  }</p>
+))}
+ </div>
+   */}
+   <div className="flex flex-col w-[335px] border-2 border-white p-4 gap-4">
+  <p className="font-bold text-white border-b border-white flex items-center gap-2">
+    <IoCalendarOutline /> 3-DAY FORECAST
+  </p>
+
+  {forecastData.forecast?.forecastday?.slice(0, 3).map((dayData, index) => {
+    const date = new Date(dayData.date);
+    const label = index === 0 ? "Today" : date.toLocaleDateString("en-US", { weekday: "long" });
+
+    const minTemp = dayData.day.mintemp_c;
+    const maxTemp = dayData.day.maxtemp_c;
+    const icon = dayData.day.condition.icon;
+
+    // برای ساخت تایم‌لاین
+    const tempRange = maxTemp - minTemp;
+    const progressPercent = Math.round((minTemp / maxTemp) * 100);
+
+    return (
+      <div
+        key={dayData.date}
+        className="text-white flex flex-col gap-2 border-b border-gray-600 pb-4"
+      >
+        <p className="text-lg font-semibold">{label}</p>
+
+        <div className="flex items-center gap-4">
+          <img src={icon} alt="weather icon" className="w-10 h-10" />
+          <p className="text-sm">
+            Min: {minTemp}°C | Max: {maxTemp}°C
+          </p>
+        </div>
+
+        {/* تایم‌لاین دما */}
+        <div className="w-full h-2 bg-white/30 rounded relative mt-2">
+          <div
+            className="h-2 bg-yellow-400 rounded"
+            style={{ width: `${(minTemp / maxTemp) * 100}%` }}
+          ></div>
+        </div>
+      </div>
+    );
+  })}
+</div>
+
+    
+
     </div>
 
 

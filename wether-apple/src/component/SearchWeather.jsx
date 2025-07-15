@@ -15,7 +15,7 @@ function SearchWeather() {
   const navigate = useNavigate()
   const [city, setCity] = useState("");
   const [search, setSearch] = useState("");
-   const [weatherCards, setWeatherCards] = useState([]);
+ const [weatherCards, setWeatherCards] = useState([]);
  const currentWeather = useSelector((state) => state.currentWeather);
 const geoWeather = useSelector((state) => state.location);
 const currentLoading = useSelector((state) => state.currentWeather.isLoading);
@@ -44,8 +44,8 @@ const geoError = useSelector((state) => state.location.error);
             card.city === search
               ? { ...card, data: currentWeather, tz_id: currentWeather.location?.tz_id }
               : card
-          );
-        } else {
+            );
+          } else {
           setCityCookie(search);
           return [
             ...prev,
@@ -63,7 +63,7 @@ const geoError = useSelector((state) => state.location.error);
               : card
           );
         } else {
-          return [...prev, { city: "Geo", data: geoWeather, tz_id: geoWeather.location.tz_id }];
+          return [...prev, { city: "Geo", data: geoWeather, tz_id: geoWeather.location?.tz_id }];
         }
       });
     }
