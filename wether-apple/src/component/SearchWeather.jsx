@@ -53,7 +53,7 @@ const geoError = useSelector((state) => state.location.error);
           ];
         }
       });
-    } else if (!search && geoWeather) {
+    } else if (!search && geoWeather && geoWeather.location) {
       setWeatherCards((prev) => {
         const exists = prev.find((card) => card.city === "Geo");
         if (exists) {
@@ -82,36 +82,40 @@ const geoError = useSelector((state) => state.location.error);
   //   setCity("");
   // };
 const clickHandler = (e) => {
-  // e.preventDefault(); // اشتباهت اینجا بود نوشته بودی "e.preventDefualt()" غلط املایی بود 😅
   const trimCity = city.trim();
+
+  // جلوگیری از درخواست تکراری برای شهر موجود
+  const exists = weatherCards.find((card) => card.city.toLowerCase() === trimCity.toLowerCase());
+  if (trimCity && exists) {
+    console.log("این شهر قبلاً اضافه شده");
+    setCity(""); // ریست کردن input
+    return;
+  }
+
   if (!trimCity) {
     dispatch(fetchGeoWeather());
-    // آپدیت کارت Geo
-    setWeatherCards((prev) => {
-      const exists = prev.find((card) => card.city === "Geo");
-      if (exists) return prev;
-      return [...prev, { city: "Geo", data: geoWeather, tz_id: geoWeather?.location?.tz_id }];
-    });
+    const geoExists = weatherCards.find((card) => card.city === "Geo");
+    if (geoExists) return;
+    setWeatherCards((prev) => [
+      ...prev,
+      { city: "Geo", data: geoWeather, tz_id: geoWeather?.location?.tz_id },
+    ]);
   } else {
     dispatch(fetchCurrentWeather(trimCity)).then((res) => {
       const data = res.payload;
       if (!data) return;
+
       setCityCookie(trimCity);
-      setWeatherCards((prev) => {
-        const exists = prev.find((card) => card.city === trimCity);
-        if (exists) {
-          return prev.map((card) =>
-            card.city === trimCity ? { ...card, data, tz_id: data.location.tz_id } : card
-          );
-        } else {
-          return [...prev, { city: trimCity, data, tz_id: data.location.tz_id }];
-        }
-      });
+      setWeatherCards((prev) => [
+        ...prev,
+        { city: trimCity, data, tz_id: data.location.tz_id },
+      ]);
     });
   }
 
   setCity("");
 };
+
 
   return (
     <div className="w-[375px] h-[812px] bg-black absolute flex flex-col items-center p-4 ">
@@ -126,7 +130,7 @@ const clickHandler = (e) => {
           placeholder="Search for a city or airport"
           className="placeholder:text-white w-full h-[39px] p-4 bg-gray-700 rounded-2xl text-white"
           onKeyDown={(e) => {
-            if (e.key === "Enter") clickHandler();
+            if (e.key === "Enter") clickHandler(e);
           }}
         />
 
@@ -151,7 +155,8 @@ const clickHandler = (e) => {
                 />
               ) : (
                 <Current
-                  key={card.tz_id}
+                  key={`${card.city}-${card.data.location?.name}-${card.tz_id}`}
+
                   data={card.data}
                   isLoading={currentLoading}
                   error={currentError}

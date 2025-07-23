@@ -12,11 +12,17 @@ import { IoCalendarOutline } from "react-icons/io5";
 
 function Details() {
   const { tz_id } = useParams();
-  const decodedTzId = decodeURIComponent(tz_id.split("/")[1]);
+  const decodedTzId = decodeURIComponent(tz_id);
+  
+
   const dispatch = useDispatch();
   const [place, setPlace] = useState(null);
+ 
 
-const currentWeather = useSelector((state) => state.currentWeather);
+const currentWeather = useSelector(
+  (state) => state.currentWeather.data[place?.toLowerCase()]
+);
+
 const geoWeather = useSelector((state) => state.location);
 const forecastData = useSelector((state) => state.forecast);
 
@@ -29,37 +35,42 @@ const geoError = useSelector((state) => state.location.error);
 const forecastError = useSelector((state) => state.forecast.error);
 
 
-  useEffect(() => {
-    const cookie = getCityCookies();
-    let name = null;
+ useEffect(() => {
+  const cookie = getCityCookies();
+  let name = null;
 
-    // بررسی geo یا matchedCookie
-    const matchedCity = cookie.find(
-      (c) => typeof c === "object" && c.tz_id === decodedTzId
-    );
+  const matchedCity = cookie.find(
+    (c) => typeof c === "object" && c.tz_id === decodedTzId
+  );
 
- if (decodedTzId === "Geo") {
-  name = "Geo";
-} else if (matchedCity) {
-  name = matchedCity.name;
-} else {
-  name = decodedTzId.split("/").pop().replace("_", " ");
-}
+  if (decodedTzId === "Geo") {
+    name = "Geo";
+  } else if (matchedCity) {
+    name = matchedCity.name;
+  } else {
+    name = decodedTzId.split("/")[1]?.replace("_", " ");
+  }
 
-    if (!name) return;
+  if (!name) return;
 
-    setPlace(name);
+  setPlace(name);
+const existingCity =
+    name !== "Geo" &&
+    currentWeather?.location?.name?.toLowerCase() === name?.toLowerCase();
 
-    if (name === "Geo") {
-      dispatch(fetchGeoWeather());
-      dispatch(fetchForeCastWeather("Geo"));
-    } else {
+  if (name === "Geo") {
+    dispatch(fetchGeoWeather());
+    dispatch(fetchForeCastWeather("Geo"));
+  } else {
+    if (!existingCity) {
       dispatch(fetchCurrentWeather(name));
       dispatch(fetchForeCastWeather(name));
     }
-    console.log("👉 Requested forecast for:", name);
+  }
 
-  }, [decodedTzId]);
+  console.log("👉 Requested forecast for:", name);
+}, [decodedTzId]);
+
 
   // 🔍 بررسی اینکه geo valid هست یا نه
   const isGeoValid =
@@ -88,7 +99,7 @@ if (
       <div  className="w-[375px] h-[195px] text-white rounded-2xl p-4 shadow-3xl justify-center  shadow-white flex flex-col items-center gap-2">
         
           
-    <p className="  text-3xl text-white font-bold items-center">{weatherData?.location?.name}</p>
+    <p className="  text-3xl text-white font-bold items-center">{place}</p>
     <p className="   items-center font-bold ">{weatherData.current?.temp_c}°C</p>
     <p className=" items-center ">{weatherData.current?.condition?.text}</p> 
        

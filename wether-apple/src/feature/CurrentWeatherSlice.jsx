@@ -18,14 +18,15 @@ const fetchCurrentWeather =createAsyncThunk(
 );
 
 const initialState = {
-  current: {},
-  location: {},
+  // current: {},
+  // location: {},
+  data:{},
   isLoading: false,
   error: null
 }
 
 const WeatherCurrentSlice = createSlice({
-  name: 'weather',
+  name: 'currentWeather',
   initialState,
   reducers: {},
   extraReducers: (builder) => {
@@ -36,10 +37,8 @@ const WeatherCurrentSlice = createSlice({
       })
       .addCase(fetchCurrentWeather.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.current = action.payload.current;
-        state.location = action.payload.location;
-        
-
+        const city = action.meta.arg.toLowerCase();
+        state.data[city] = action.payload; // هر شهر رو داینامیک ذخیره می‌کنیم
       })
       .addCase(fetchCurrentWeather.rejected, (state, action) => {
         state.isLoading = false;
@@ -47,5 +46,6 @@ const WeatherCurrentSlice = createSlice({
       });
   }
 });
+
 export default WeatherCurrentSlice.reducer;
 export { fetchCurrentWeather };
