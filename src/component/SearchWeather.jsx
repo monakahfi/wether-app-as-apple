@@ -64,41 +64,35 @@ useEffect(() => {
   }
 }, [search, currentWeather, geoWeather]);
 
-useEffect(() => {
-  const savedCities = getCityCookies(); // کوکی‌ها
+  useEffect(() => {
+  const savedCities = getCityCookies(); // از کوکی بخون
 
   savedCities.forEach(({ name, tz_id }) => {
-    if (name && tz_id && tz_id === "Geo") {
+   if (name && tz_id && tz_id === "Geo"){
       dispatch(fetchGeoWeather()).then((res) => {
         const data = res.payload;
-        if (data && data.location) {
-          const exists = weatherCards.find((card) => card.city === "Geo");
-          if (!exists) {
-            setWeatherCards((prev) => [
-              ...prev,
-              { city: "Geo", data, tz_id: data.location.tz_id },
-            ]);
-          }
-        }
+        if (!data) return;
+
+        setWeatherCards((prev) => {
+          const exists = prev.find((card) => card.city === "Geo");
+          if (exists) return prev;
+          return [...prev, { city: "Geo", data, tz_id: "Geo" }];
+        });
       });
     } else {
       dispatch(fetchCurrentWeather(name)).then((res) => {
         const data = res.payload;
-        if (data && data.location) {
-          const exists = weatherCards.find(
-            (card) => card.city.toLowerCase() === name.toLowerCase()
-          );
-          if (!exists) {
-            setWeatherCards((prev) => [
-              ...prev,
-              { city: name, data, tz_id: data.location.tz_id },
-            ]);
-          }
-        }
+        if (!data) return;
+
+        setWeatherCards((prev) => {
+          const exists = prev.find((card) => card.city.toLowerCase() === name.toLowerCase());
+          if (exists) return prev;
+          return [...prev, { city: name, data, tz_id: data.location?.tz_id }];
+        });
       });
     }
   });
-}, [location.pathname]); // اضافه کن به دپندنسی
+}, [location.pathname]); 
 
 
 const clickHandler = (e) => {
@@ -121,7 +115,7 @@ const clickHandler = (e) => {
       { city: "Geo", data: geoWeather, tz_id: geoWeather?.location?.tz_id },
     ]);
   } else {
-    if (!trimCity) return;
+   
 
     dispatch(fetchCurrentWeather(trimCity)).then((res) => {
       const data = res.payload;
