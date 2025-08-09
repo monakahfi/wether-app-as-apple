@@ -7,7 +7,7 @@ import { fetchGeoWeather } from "../feature/LocationSlice";
 import { fetchCurrentWeather } from "../feature/CurrentWeatherSlice";
 import { FaSearchMinus } from "react-icons/fa";
 import { getCityCookies, setCityCookie } from "../cookie/Cookie";
-import { useLocation, useNavigate } from "react-router-dom";
+import { redirect, useLocation, useNavigate } from "react-router-dom";
 
 
 function SearchWeather() {
@@ -66,7 +66,22 @@ useEffect(() => {
 
   useEffect(() => {
   const savedCities = getCityCookies(); // از کوکی بخون
-
+  if(navigate === "/"){
+    savedCities.find(({name , tz_id})=>{
+      if(name && tz_id && tz_id === "geo") {
+        dispatch(fetchGeoWeather()).then((res)=>{
+          const data = res.payload;
+          if(!data)return;
+        })
+      }else{
+        dispatch(fetchCurrentWeather([0])).then((res)=>{
+          const data = res.payload;
+          if(!data)return;
+        })
+      }
+    })//برای نمایش داده برای سایز lg
+    
+  }
   savedCities.forEach(({ name, tz_id }) => {
    if (name && tz_id && tz_id === "Geo"){
       dispatch(fetchGeoWeather()).then((res) => {
@@ -92,7 +107,7 @@ useEffect(() => {
       });
     }
   });
-}, [location.pathname]); 
+}, [location.pathname , navigate]); 
 
 
 const clickHandler = (e) => {
@@ -137,7 +152,7 @@ const clickHandler = (e) => {
 
 
   return (
-    <div className="w-[375px] h-[812px] lg:w-full  bg-black absolute flex flex-col items-center p-4 ">
+    <div className="w-[375px] h-[812px]   bg-black absolute flex flex-col items-center p-4 ">
       <div className="w-full flex  mb-1 pb-1 gap-4 justify-between ">
         <CgMenuRound className="w-[29px] h-[29px] text-white items-start" />
         <p className="font-bold text-white text-xl items-end">Weather</p>
@@ -160,7 +175,7 @@ const clickHandler = (e) => {
          </div>
       
         
-         <div className="mt-0 w-full flex flex-col gap-4 overflow-y-auto">
+         <div className="mt-0 w-full flex flex-col gap-4 overflow-y-auto ">
           // ... (بخش‌های قبلی کد بدون تغییر)
 
 {weatherCards.map((card) =>
@@ -174,7 +189,7 @@ const clickHandler = (e) => {
                   onClick={() => navigate(`/details/${encodeURIComponent(card.tz_id)}`)}
                 />
               ) : (
-                <Current
+                <Current 
                   key={`${card.city}-${card.data.location?.name}-${card.tz_id}`}
 
                   data={card.data}
