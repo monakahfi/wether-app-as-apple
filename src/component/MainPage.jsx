@@ -5,14 +5,14 @@ import Details from './Details'
 function MainPage() {
     
   return (
-     <div className="flex flex-col lg:flex-row  bg-black">
-      <div className="flex-1 ">
-        <SearchWeather />
-      </div>
-      <div className="hidden lg:block flex-1 max-w-fit">
-        <Details />
-      </div>
-    </div>
+    <div className="flex">
+  <div className="w-full lg:w-1/2">
+    <SearchWeather />
+  </div>
+  <div className="hidden lg:block w-1/2">
+    <Details />
+  </div>
+</div>
   )
 }
 
