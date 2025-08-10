@@ -1,4 +1,4 @@
-
+import {ThreeDot} from "react-loading-indicators";
 
 function Current({ data, isLoading, error,onClick }) {
   // مدیریت داده‌ها با مقدار پیش‌فرض
@@ -6,7 +6,7 @@ function Current({ data, isLoading, error,onClick }) {
  
 
   // اگه در حال بارگذاری یا خطا باشه، فقط اون رو نشون بده
-  if (isLoading) return <p className="text-gray-400 mt-4">در حال بارگذاری...</p>;
+  if (isLoading) return <ThreeDot variant="bob" color="#3192cc" size="small" text="" textColor="#1811e8" />;
   if (error) return <p className="text-red-500 mt-4">خطا: {error}</p>;
 
   // چک کردن وجود نام شهر برای رندر کارت

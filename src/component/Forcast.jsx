@@ -1,7 +1,8 @@
- 
+ import {ThreeDot} from "react-loading-indicators";
+
 function Forcast({data,isLoading,error}) {
     const forecastDays = data?.forecast?.forecastday || [];
-    if(isLoading)return <p>loading....</p>
+    if(isLoading)return <ThreeDot variant="bob" color="#3192cc" size="small" text="" textColor="#1811e8" />
     if(error)return<p>{error.message}</p>
     console.log({data})
   return (

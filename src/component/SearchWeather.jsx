@@ -7,87 +7,42 @@ import { fetchGeoWeather } from "../feature/LocationSlice";
 import { fetchCurrentWeather } from "../feature/CurrentWeatherSlice";
 import { FaSearchMinus } from "react-icons/fa";
 import { getCityCookies, setCityCookie } from "../cookie/Cookie";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { GetCurrentSearch, GetGeoSearch, ShowCard } from "../ruls/Rules";
+
 
 function SearchWeather() {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+  
+
   const [city, setCity] = useState("");
   const [weatherCards, setWeatherCards] = useState([]);
 
-  const currentWeather = useSelector((state) => state.currentWeather);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+    const currentWeather = useSelector((state) => state.currentWeather);
   const geoWeather = useSelector((state) => state.location);
   const currentLoading = useSelector((state) => state.currentWeather.isLoading);
   const geoLoading = useSelector((state) => state.location.isLoading);
   const currentError = useSelector((state) => state.currentWeather.error);
   const geoError = useSelector((state) => state.location.error);
-  const location = useLocation();
-
-  // لود داده‌های کوکی
+ 
+  // لود اولیه فقط یکبار
   useEffect(() => {
-    const savedCities = getCityCookies();
+    ShowCard({ dispatch, setWeatherCards });
+  }, [dispatch]);
 
-    savedCities.forEach(({ name, tz_id }) => {
-      if (tz_id?.toLowerCase() === "geo") {
-        dispatch(fetchGeoWeather()).then((res) => {
-          const data = res.payload;
-          if (!data) return;
-          setWeatherCards((prev) => {
-            const exists = prev.find((card) => card.city === "Geo");
-            return exists ? prev : [...prev, { city: "Geo", data, tz_id: "Geo" }];
-          });
-        });
-      } else {
-        dispatch(fetchCurrentWeather(name)).then((res) => {
-          const data = res.payload;
-          if (!data) return;
-          setWeatherCards((prev) => {
-            const exists = prev.find(
-              (card) => card.city.toLowerCase() === name.toLowerCase()
-            );
-            return exists
-              ? prev
-              : [...prev, { city: name, data, tz_id: data.location?.tz_id }];
-          });
-        });
-      }
-    });
-  }, [dispatch, location.pathname]);
+  // وقتی geoWeather تغییر کرد
+ useEffect(() => {
+  if (geoWeather?.location?.tz_id?.toLowerCase() === "geo") {
+    GetGeoSearch({ geoWeather, setWeatherCards });
+  } else {
+    GetCurrentSearch({ currentWeather, setWeatherCards });
+  }
+}, [geoWeather, currentWeather]);
 
-  // اضافه کردن یا آپدیت Geo وقتی از API بیاد
-  useEffect(() => {
-    if (!geoWeather?.location) return;
-    setWeatherCards((prev) => {
-      const exists = prev.find((card) => card.city === "Geo");
-      return exists
-        ? prev.map((card) =>
-            card.city === "Geo"
-              ? { ...card, data: geoWeather, tz_id: geoWeather.location?.tz_id }
-              : card
-          )
-        : [...prev, { city: "Geo", data: geoWeather, tz_id: geoWeather.location?.tz_id }];
-    });
-  }, [geoWeather]);
 
-  // اضافه کردن یا آپدیت شهر وقتی از API بیاد
-  useEffect(() => {
-    if (!currentWeather?.data) return;
-
-    Object.entries(currentWeather.data).forEach(([cityName, weatherData]) => {
-      setWeatherCards((prev) => {
-        const exists = prev.find(
-          (card) => card.city.toLowerCase() === cityName.toLowerCase()
-        );
-        return exists
-          ? prev.map((card) =>
-              card.city.toLowerCase() === cityName.toLowerCase()
-                ? { ...card, data: weatherData, tz_id: weatherData.location?.tz_id }
-                : card
-            )
-          : [...prev, { city: cityName, data: weatherData, tz_id: weatherData.location?.tz_id }];
-      });
-    });
-  }, [currentWeather]);
+ 
 
   const clickHandler = () => {
     const trimCity = city.trim();
