@@ -54,8 +54,11 @@ function Details() {
     const existingCity = name !== "Geo" && !!currentWeather?.[key];
 
     if (name === "Geo") {
-      dispatch(fetchGeoWeather());
-      dispatch(fetchForeCastWeather("Geo"));
+      Promise.all([
+
+        dispatch(fetchGeoWeather()),
+        dispatch(fetchForeCastWeather("Geo")) 
+      ]);
     } else {
       if (!existingCity) {
         dispatch(fetchCurrentWeather(name));
@@ -70,14 +73,11 @@ function Details() {
     ? geoWeather
     : currentWeather?.[place?.toLowerCase()];
 
-  if (
-    (!weatherData?.current || !forecastData?.forecast || !geoWeather.location) &&
-    !currentLoading &&
-    !geoLoading &&
-    !forecastLoading
-  ) {
-    return <p>داده‌های آب‌وهوا در دسترس نیست</p>;
-  }
+    const noData = !weatherData?.current || !forecastData?.forecast || !geoWeather.location;
+    const noLoadind =  !currentLoading &&!geoLoading && !forecastLoading;
+  if ((noData) &&(noLoadind)) { return <p>داده‌های آب‌وهوا در دسترس نیست</p>}
+  
+  if(currentError && geoError && forecastError){return <p className="text-red-500">{error.message}</p>}
 
   return (
     <div className="w-[375px] h-[812px] flex flex-col items-center bg-black py-4 gap-4 lg:w-full">
