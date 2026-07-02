@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { GetCurrentSearch, GetGeoSearch, ShowCard, ShowLgSize } from "../ruls/Rules";
 
 
-function SearchWeather() {
+function SearchWeather({ setSelectedId }) {
   
 
   const [city, setCity] = useState("");
@@ -30,10 +30,7 @@ function SearchWeather() {
   // لود اولیه فقط یکبار
   useEffect(() => {
     ShowCard({ dispatch, setWeatherCards });
-    // if (window.innerWidth >= 1024){
-
-    //   ShowLgSize({ dispatch, setWeatherCards });
-    // }
+   
   }, [dispatch]);
 
   // وقتی geoWeather تغییر کرد
@@ -57,8 +54,8 @@ const clickHandler = () => {
     (card) => card.city === trimCity
   );
   if (exists) {
-    console.log("این شهر قبلاً اضافه شده");
-    setCity("");
+    alert("این شهر قبلاً اضافه شده");
+    setCity(" ");
     return;
   }
 
@@ -70,7 +67,7 @@ const clickHandler = () => {
 
 
   return (
-    <div className="w-[390px] h-[812px] max-lg:h-auto max-xl:w-fit bg-black absolute flex flex-col items-center p-4">
+   <div className="w-[390px] h-[812px] max-lg:h-auto max-xl:w-fit bg-black flex flex-col items-center p-4 z-50">
       <div className="w-full flex mb-1 pb-1 gap-4 justify-between">
         <CgMenuRound className="w-[29px] h-[29px] text-white" />
         <p className="font-bold text-white text-xl">Weather</p>
@@ -101,15 +98,29 @@ const clickHandler = () => {
         data={card?.data}
         isLoading={geoLoading}
         error={geoError}
-        onClick={() => navigate(`/details/${card.id}`)}
+      onClick={() => {
+        console.log("clicked", card.id);
+  if (window.innerWidth >= 1024) {
+    setSelectedId(`${card.id}`);
+  } else {
+    navigate(`/details/${card.id}`);
+  }
+}}
       />
     ) : (
       <Current
-        key={`${card.data?.name}-${card.id}`}
+        key={card.id}
         data={card.data}
         isLoading={currentLoading}
         error={currentError}
-        onClick={() => navigate(`/details/${card.id}`)}
+      onClick={() => {
+        console.log("clicked", card.id);
+  if (window.innerWidth >= 1024) {
+    setSelectedId(`${card.id}`);
+  } else {
+    navigate(`/details/${card.id}`);
+  }
+}}
       />
     )
   ) : null

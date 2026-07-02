@@ -16,7 +16,7 @@ export const fetchGeoWeather = createAsyncThunk(
       const lon = Number(position.coords.longitude.toFixed(4));
 
 
-      const key = '61bf21e74fbe226da33151612e1a4947';
+      const key = 'cfa24f1f6b74f41f792e479df926307e';
       const response = await axios.get(
         `${import.meta.env.VITE_BASE_URL}weather?lat=${lat}&lon=${lon}&appid=${key}&units=metric`
 

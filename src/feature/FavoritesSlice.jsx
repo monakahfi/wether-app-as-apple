@@ -6,7 +6,7 @@ const fetchHistory = createAsyncThunk(
   "historyWeather/fetchHistoryWeather",
   async(cityName, thunkAPI)=> {
   try {
-      const key = "207d4477b43c4ed78ff103733250306";
+      const key = "cfa24f1f6b74f41f792e479df926307e";
       const today = new Date().toISOString().split('T')[0];
     const response = await axios.get(`${import.meta.env.VITE_BASE_URL}history.json?key=${key}&q=${cityName}&dt=${today}`);
     return response.data;

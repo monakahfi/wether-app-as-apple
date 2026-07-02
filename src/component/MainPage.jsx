@@ -1,19 +1,22 @@
-import React from 'react'
-import SearchWeather from './SearchWeather'
-import Details from './Details'
+import { useState } from "react";
+import SearchWeather from "./SearchWeather";
+import Details from "./Details";
 
 function MainPage() {
-    
+  
+  const [selectedId, setSelectedId] = useState(null);
+console.log("selectedId =", selectedId);
   return (
-    <div >
-  <div className="w-full lg:w-1/2 ">
-    <SearchWeather />
-  </div>
-  <div className="hidden lg:block w-1/2 items-start">
-    <Details />
-  </div>
+   <div className="flex flex-col lg:flex-row">
+    <div className="lg:w-[390px]">
+        <SearchWeather setSelectedId={setSelectedId}/>
+    </div>
+
+   <div className="hidden lg:flex flex-1 bg-black">
+    {selectedId && <Details id={selectedId} />}
 </div>
-  )
+</div>
+  );
 }
 
-export default MainPage
+export default MainPage;

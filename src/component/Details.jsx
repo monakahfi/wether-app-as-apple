@@ -12,10 +12,12 @@ import { IoCalendarOutline } from "react-icons/io5";
 
 import {ThreeDot} from "react-loading-indicators";
 
-function Details() {
+function Details({ id: desktopId }) {
   const navigate = useNavigate();
-  const {id} = useParams();
-   const idn = decodeURIComponent(id)
+const { id: routeId } = useParams();
+
+const id = desktopId ?? routeId;
+console.log(id)
  
 
   const dispatch = useDispatch();
@@ -26,56 +28,51 @@ function Details() {
   const geoWeather = useSelector((state) => state.geoWeather);
 
 
- 
-  useEffect(() => {
-    const cookie = getCityCookies();
-    let name = null;
+useEffect(() => {
+  if (!id) return;
 
-    const matchedCity = cookie.find((c) => c.id === idn );
-    if (!name) return;
+  const cookie = getCityCookies();
 
-    if (idn === "Geo") {
-      name = "Geo";
-    } else if (matchedCity) {
-      name = matchedCity.name;
-    } else {
-      name = idn
-    }
+  if (id === "Geo") {
+    dispatch(fetchGeoWeather());
+    return;
+  }
 
-    
+  const matchedCity = cookie.find(c => String(c.id) === id);
 
-    setPlace(name);
-    const existingCity = name == "Geo" && !currentWeather.data?.name;
-    const lat = matchedCity?.lat
-    const lon = matchedCity?.lon
+  if (!matchedCity) return;
 
-    if (name === "Geo") {
-        
-      Promise.all([
+  setPlace(matchedCity.name);
 
-        dispatch(fetchGeoWeather()),
-        dispatch(fetchForeCastWeather({ lat, lon })) 
-      ]);
-    } else {
-      if (!existingCity) {
-        dispatch(fetchCurrentWeather(currentWeather.name));
-        
-        dispatch(fetchForeCastWeather( { lat,lon } ));
-      }
-    }
-    
-  }, [idn , dispatch]);
+  dispatch(fetchCurrentWeather(matchedCity.name));
 
-  const isGeoValid = idn === "Geo";
+  dispatch(
+    fetchForeCastWeather({
+      lat: matchedCity.lat,
+      lon: matchedCity.lon,
+    })
+  );
+}, [id, dispatch]);
+
+  const isGeoValid = id === "Geo";
 
 
- const weatherData = isGeoValid ? geoWeather.data : currentWeather.data?.[idn];
+console.log("currentWeather =", currentWeather);
+console.log("currentWeather.data =", currentWeather.data);
 
-  console.log(forecastData)
-  if (currentWeather.data.isLoading || geoWeather.data.isLoading  || forecastData.data.isLoading ) return <ThreeDot variant="bob" color="#3192cc" size="small" text="" textColor="#1811e8" />;
-  if (currentWeather.data.error || geoWeather.data.error  || forecastData.data.error ) return <p className="text-red-500 mt-4">خطا: </p>;
+const weatherData = isGeoValid
+  ? geoWeather.data
+  : currentWeather.data?.[id];
+
+console.log("id =", id, typeof id);
+console.log("keys =", Object.keys(currentWeather.data));
+console.log("lookup =", currentWeather.data[id]); 
+
+  if (currentWeather?.isLoading || geoWeather?.isLoading  || forecastData?.isLoading ) return <ThreeDot variant="bob" color="#3192cc" size="small" text="" textColor="#1811e8" />;
+  // if (currentWeather.error || geoWeather.error  || forecastData.error ) return <p className="text-red-500 mt-4">خطا: </p>;
+  console.log("weatherData =", weatherData);
   return (
-    <div className="w-[375px] h-[812px] flex flex-col items-center bg-black py-4 gap-4 max-md:w-auto max-md:h-full">
+    <div className="w-[375px] h-[812px] flex flex-col items-center bg-black py-4 gap-4 max-md:w-auto max-md:h-full z-10">
       <button className="text-white" onClick={() => navigate("/")}>بازگشت</button>
 
       {weatherData?.main && (
@@ -88,12 +85,12 @@ function Details() {
         </div>
       )}
 
-      { forecastData?.forecast?.list?.length  ? (
+      { forecastData?.data?.list?.length  ? (
         <div className="w-[375px] h-auto flex items-center justify-center rounded-2xl gap-2 text-white">
           <Forcast
-            data={forecastData.data.data}
-            isLoading={forecastData.data.isLoading}
-            error={forecastData.data.error}
+            data={forecastData.data}
+            isLoading={forecastData.isLoading}
+            error={forecastData.error}
           />
         </div>
       ) : null }
@@ -103,18 +100,25 @@ function Details() {
           <IoCalendarOutline /> 3-DAY FORECAST
         </p>
 
-        {forecastData.forecast?.list?.slice(0, 3).map((dayData, index) => {
-          const date = new Date(dayData.date);
-          const label = index === 0 ? "Today" : date.toLocaleDateString("en-US", { weekday: "long" });
-          const minTemp = dayData.day.mintemp_c;
-          const maxTemp = dayData.day.maxtemp_c;
-          const icon = dayData.day.condition.icon;
+        {forecastData.data?.list?.slice(0, 3).map((item, index) => {
+         const date = new Date(item.dt_txt);
+const label =
+  index === 0
+    ? "Today"
+    : date.toLocaleDateString("en-US", { weekday: "long" });
+
+const minTemp = item.main.temp_min;
+const maxTemp = item.main.temp_max;
+const icon = `https://openweathermap.org/img/wn/${item.weather[0].icon}@2x.png`;
           const totalRange = 60;
           const leftPercent = (minTemp / totalRange) * 100;
           const widthPercent = ((maxTemp - minTemp) / totalRange) * 100;
 
+          console.log(forecastData.data);
+console.log(forecastData.data?.list);
+
           return (
-            <div key={dayData.date} className="h-[55px] w-[303px] text-white flex gap-2 border-b border-gray-600 pb-4">
+            <div key={item.dt} className="h-[55px] w-[303px] text-white flex gap-2 border-b border-gray-600 pb-4">
               <p className="w-[58px] h-[26px] text-xs font-bold">{label}</p>
               <div className="flex items-center gap-4">
                 <img src={icon} alt="weather icon" className="w-[28px] h-[26px]" />

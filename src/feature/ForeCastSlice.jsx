@@ -9,8 +9,8 @@ const fetchForeCastWeather = createAsyncThunk(
     
     
       const key =  'cfa24f1f6b74f41f792e479df926307e';
-      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}forecast/daily?lat=${lat}&lon=${lon}&appid=${key}&units=metric`);
-      console.log("Weather Data:", response);
+      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}forecast?lat=${lat}&lon=${lon}&appid=${key}&units=metric`);
+      
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(
@@ -24,7 +24,7 @@ const initialState = {
 data:{},
 
   isLoading: false,
-  error: null
+  error: " "
 };
 
 const forecastWeatherSlice = createSlice({
@@ -38,12 +38,13 @@ const forecastWeatherSlice = createSlice({
         
       })
      .addCase(fetchForeCastWeather.fulfilled, (state, action) => {
+      console.log(action.payload);
   state.isLoading = false;
 state.data = action.payload;
 })
       .addCase(fetchForeCastWeather.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload;
+          state.isLoading = false;
+    state.error = action.payload;
       });
   }
 });

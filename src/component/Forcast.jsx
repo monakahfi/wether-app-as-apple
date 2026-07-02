@@ -1,7 +1,7 @@
 import { ThreeDot } from "react-loading-indicators";
 
 function Forcast({ data, isLoading, error }) {
-  const forecastList = data?.forecast?.list || [];
+  const forecastList = data?.list || [];
 
   if (isLoading)
     return (
@@ -24,14 +24,14 @@ function Forcast({ data, isLoading, error }) {
 
       {/* Hours */}
       <div className="w-full h-[140px] flex gap-2 justify-between items-end px-2">
-        {forecastList.length ?( forecastList.slice(0, 5).map((item, index) => {
+        {forecastList.length ?( forecastList.slice(0,5).map((item, index) => {
           const time = item.dt_txt.split(" ")[1].slice(0, 5);
           const icon = `https://openweathermap.org/img/wn/${item.weather[0].icon}@2x.png`;
           const temp = Math.round(item.main.temp);
 
           return (
             <div
-              key={forecastList.id}
+              key={item.dt}
               className="w-[34px] h-[72px] flex flex-col justify-center items-center"
             >
               <p className="text-xs">{time}</p>
