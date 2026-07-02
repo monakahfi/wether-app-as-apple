@@ -1,14 +1,14 @@
 import Cookies from 'js-cookie';
 
 
-const setCityCookie = ({ name, tz_id }) => {
-  if (!name || !tz_id) return;
+const setCityCookie = ({ name, id , lat , lon}) => {
+  if (!name || !id) return;
 
   const cities = getCityCookies();
-  const exists = cities.some((c) => c.name === name && c.tz_id === tz_id);
+  const exists = cities.some((c) => c.name === name && c.id === id);
 
   if (!exists) {
-    cities.push({ name, tz_id }); // ✅ اینجا رو درست کن
+    cities.push({ name, id  , lat , lon}); 
     Cookies.set('searchedCities', JSON.stringify(cities), { expires: 7 });
   }
 };
@@ -23,8 +23,8 @@ const getCityCookies = () => {
   }
 };
 
-const removeCityCookie = (tz_id) => {
-  const cities = getCityCookies().filter((c) => c.tz_id !== tz_id);
+const removeCityCookie = (id) => {
+  const cities = getCityCookies().filter((c) => c.id !== id);
   Cookies.set('searchedCities', JSON.stringify(cities), { expires: 7 });
 };
 

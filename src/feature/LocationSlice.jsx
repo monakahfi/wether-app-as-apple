@@ -3,7 +3,7 @@ import axios from "axios";
 
 // AsyncThunk برای گرفتن لوکیشن و درخواست آب‌وهوا
 export const fetchGeoWeather = createAsyncThunk(
-  "geoWeather/fetchGeoWeather",
+  "fetchGeoWeather/geoWeather",
   async (thunkAPI) => {
     try {
       const getPosition = () =>
@@ -16,9 +16,10 @@ export const fetchGeoWeather = createAsyncThunk(
       const lon = Number(position.coords.longitude.toFixed(4));
 
 
-      const key = "207d4477b43c4ed78ff103733250306";
+      const key = '61bf21e74fbe226da33151612e1a4947';
       const response = await axios.get(
-        `${import.meta.env.VITE_BASE_URL}current.json?key=${key}&q=${lat},${lon}&aqi=yes`
+        `${import.meta.env.VITE_BASE_URL}weather?lat=${lat}&lon=${lon}&appid=${key}&units=metric`
+
       );
       console.log("Weather Data:", response);
       return response.data;
@@ -32,24 +33,23 @@ export const fetchGeoWeather = createAsyncThunk(
 
 const geoWeatherSlice = createSlice({
   name: "geoWeather",
-  initialState: {
-    location: {},
-    current: {},
-    isLoading: false,
-    error: null,
-  },
+initialState: {
+  data: {},     // همه داده‌ها یکجا
+  isLoading: false,
+  error: "",
+},
   reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchGeoWeather.pending, (state) => {
         state.isLoading = true;
-        state.error = null;
+        
       })
-      .addCase(fetchGeoWeather.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.location = action.payload.location;
-        state.current = action.payload.current;
-      })
+ .addCase(fetchGeoWeather.fulfilled, (state, action) => {
+  state.isLoading = false;
+  state.data = action.payload;   // ✔️ درستش اینه
+})
+
       .addCase(fetchGeoWeather.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload || "Location access denied or failed.";

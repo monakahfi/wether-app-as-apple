@@ -13,7 +13,7 @@ function App() {
       <Routes>
         <Route path="/" element={ <MainPage/>}/>
         <Route path="/search" element={ <SearchWeather/>}/>
-        <Route path="/details/:tz_id" element={<Details/>}/>
+        <Route path="/details/:id" element={<Details/>}/>
       </Routes>
   
     

@@ -2,11 +2,15 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const fetchForeCastWeather = createAsyncThunk(
-  "forecastWeather/fetchForeCastWeather",
-  async (cityName, thunkAPI) => {
+  "fetchForeCastWeather/forecastWeather",
+  async ({lat,lon}, thunkAPI) => {
     try {
-      const key = "207d4477b43c4ed78ff103733250306";
-      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}forecast.json?key=${key}&q=${cityName}&days=10&aqi=yes&alerts=yes`);
+      
+    
+    
+      const key =  'cfa24f1f6b74f41f792e479df926307e';
+      const response = await axios.get(`${import.meta.env.VITE_BASE_URL}forecast/daily?lat=${lat}&lon=${lon}&appid=${key}&units=metric`);
+      console.log("Weather Data:", response);
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue(
@@ -17,15 +21,8 @@ const fetchForeCastWeather = createAsyncThunk(
 );
 
 const initialState = {
-  location: {},
-  current: {},
-  forecast: {
-    forecastday: []
-  },
-  alerts:{
-    alert:[]
-  },
- 
+data:{},
+
   isLoading: false,
   error: null
 };
@@ -33,20 +30,16 @@ const initialState = {
 const forecastWeatherSlice = createSlice({
   name: "forecast",
   initialState,
-  reducers: {},
+  
   extraReducers: (builder) => {
     builder
       .addCase(fetchForeCastWeather.pending, (state) => {
         state.isLoading = true;
-        state.error = null;
+        
       })
      .addCase(fetchForeCastWeather.fulfilled, (state, action) => {
   state.isLoading = false;
-  state.current = action.payload.current;
-  state.location = action.payload.location;
-  state.forecast= action.payload.forecast; 
-  state.alerts = action.payload.alerts?.alert || [];
-
+state.data = action.payload;
 })
       .addCase(fetchForeCastWeather.rejected, (state, action) => {
         state.isLoading = false;

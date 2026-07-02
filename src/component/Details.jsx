@@ -10,103 +10,100 @@ import Forcast from "./Forcast";
 
 import { IoCalendarOutline } from "react-icons/io5";
 
+import {ThreeDot} from "react-loading-indicators";
+
 function Details() {
   const navigate = useNavigate();
-  const { tz_id } = useParams();
-  const decodedTzId = decodeURIComponent(tz_id);
+  const {id} = useParams();
+   const idn = decodeURIComponent(id)
+ 
 
   const dispatch = useDispatch();
-  const [place, setPlace] = useState(null);
+  const [place, setPlace] = useState("");
+ 
+  const forecastData = useSelector((state) => state.forecast)
+  const currentWeather = useSelector((state) => state.currentWeather);
+  const geoWeather = useSelector((state) => state.geoWeather);
 
-  const currentWeather = useSelector((state) => state.currentWeather.data);
-  const geoWeather = useSelector((state) => state.location);
-  const forecastData = useSelector((state) => state.forecast);
 
-  const currentLoading = useSelector((state) => state.currentWeather.isLoading);
-  const geoLoading = useSelector((state) => state.location.isLoading);
-  const forecastLoading = useSelector((state) => state.forecast.isLoading);
-
-  const currentError = useSelector((state) => state.currentWeather.error);
-  const geoError = useSelector((state) => state.location.error);
-  const forecastError = useSelector((state) => state.forecast.error);
-
+ 
   useEffect(() => {
     const cookie = getCityCookies();
     let name = null;
 
-    const matchedCity = cookie.find(
-      (c) => c.name && c.tz_id === decodedTzId
-    );
+    const matchedCity = cookie.find((c) => c.id === idn );
+    if (!name) return;
 
-    if (decodedTzId === "Geo") {
+    if (idn === "Geo") {
       name = "Geo";
     } else if (matchedCity) {
       name = matchedCity.name;
     } else {
-      name = decodedTzId.split("/")[1]?.replace("_", " ");
+      name = idn
     }
 
-    if (!name) return;
+    
 
     setPlace(name);
-    const key = name.toLowerCase();
-
-    const existingCity = name !== "Geo" && !!currentWeather?.[key];
+    const existingCity = name == "Geo" && !currentWeather.data?.name;
+    const lat = matchedCity?.lat
+    const lon = matchedCity?.lon
 
     if (name === "Geo") {
+        
       Promise.all([
 
         dispatch(fetchGeoWeather()),
-        dispatch(fetchForeCastWeather("Geo")) 
+        dispatch(fetchForeCastWeather({ lat, lon })) 
       ]);
     } else {
       if (!existingCity) {
-        dispatch(fetchCurrentWeather(name));
-        dispatch(fetchForeCastWeather(name));
+        dispatch(fetchCurrentWeather(currentWeather.name));
+        
+        dispatch(fetchForeCastWeather( { lat,lon } ));
       }
     }
-  }, [decodedTzId]);
+    
+  }, [idn , dispatch]);
 
-  const isGeoValid = decodedTzId === "Geo" && geoWeather.location?.tz_id === "Geo";
+  const isGeoValid = idn === "Geo";
 
-  const weatherData = isGeoValid
-    ? geoWeather
-    : currentWeather?.[place?.toLowerCase()];
 
-    const noData = !weatherData?.current || !forecastData?.forecast || !geoWeather.location;
-    const noLoadind =  !currentLoading &&!geoLoading && !forecastLoading;
-  if ((noData) &&(noLoadind)) { return <p>داده‌های آب‌وهوا در دسترس نیست</p>}
-  
-  if(currentError && geoError && forecastError){return <p className="text-red-500">{error.message}</p>}
+ const weatherData = isGeoValid ? geoWeather.data : currentWeather.data?.[idn];
 
+  console.log(forecastData)
+  if (currentWeather.data.isLoading || geoWeather.data.isLoading  || forecastData.data.isLoading ) return <ThreeDot variant="bob" color="#3192cc" size="small" text="" textColor="#1811e8" />;
+  if (currentWeather.data.error || geoWeather.data.error  || forecastData.data.error ) return <p className="text-red-500 mt-4">خطا: </p>;
   return (
-    <div className="w-[375px] h-[812px] flex flex-col items-center bg-black py-4 gap-4 lg:w-full">
+    <div className="w-[375px] h-[812px] flex flex-col items-center bg-black py-4 gap-4 max-md:w-auto max-md:h-full">
       <button className="text-white" onClick={() => navigate("/")}>بازگشت</button>
 
-      {weatherData?.location && weatherData?.current && (
-        <div className="w-[375px] h-[195px] text-white rounded-2xl p-4 shadow-3xl shadow-white flex flex-col items-center gap-2">
-          <p className="text-3xl font-bold">{place}</p>
-          <p className="font-bold">{weatherData.current?.temp_c}°C</p>
-          <p>{weatherData.current?.condition?.text}</p>
+      {weatherData?.main && (
+
+        <div className="w-[375px] h-[195px]  text-white rounded-2xl p-4 shadow-3xl shadow-white flex flex-col items-center gap-2">
+       <p>{weatherData.name}</p>
+       <p>{weatherData.main.temp}°C</p>
+        <p>{weatherData.weather?.[0]?.description}</p>
+
         </div>
       )}
 
-      {forecastData?.forecast?.forecastday?.length > 0 && (
+      { forecastData?.forecast?.list?.length  ? (
         <div className="w-[375px] h-auto flex items-center justify-center rounded-2xl gap-2 text-white">
           <Forcast
-            data={forecastData}
-            isLoading={forecastLoading}
-            error={forecastError}
+            data={forecastData.data.data}
+            isLoading={forecastData.data.isLoading}
+            error={forecastData.data.error}
           />
         </div>
-      )}
+      ) : null }
 
       <div className="flex flex-col w-[335px] h-[275px] border-2 border-white p-4 gap-4">
         <p className="font-bold text-white border-b border-white flex items-center gap-2">
           <IoCalendarOutline /> 3-DAY FORECAST
         </p>
 
-        {forecastData.forecast?.forecastday?.slice(0, 3).map((dayData, index) => {
+        {forecastData.forecast?.list?.slice(0, 3).map((dayData, index) => {
           const date = new Date(dayData.date);
           const label = index === 0 ? "Today" : date.toLocaleDateString("en-US", { weekday: "long" });
           const minTemp = dayData.day.mintemp_c;

@@ -8,7 +8,7 @@ const store = configureStore({
   reducer: {
     forecast: forecastReducer,
     currentWeather: currentWeatherReducer,
-    location: locationReducer,
+    geoWeather: locationReducer,
     history: historyReducer,
     
   },

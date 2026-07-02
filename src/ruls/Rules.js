@@ -1,74 +1,116 @@
-import { getCityCookies } from "../cookie/Cookie";
+import { getCityCookies, setCityCookie } from "../cookie/Cookie";
 import { fetchCurrentWeather } from "../feature/CurrentWeatherSlice";
 import { fetchGeoWeather } from "../feature/LocationSlice";
 
-// هندل Geo
+
+
+/* ================= GEO ================= */
+
 const GetGeoSearch = ({ geoWeather, setWeatherCards }) => {
-  if (!geoWeather?.location) return;
-  const tzId = geoWeather.location?.tz_id;
+  const data = geoWeather?.data;
+  const coord = data?.coord;
+
+  if (!data || !coord?.lat || !coord?.lon) return;
+
+  setCityCookie({
+    name: "Geo",
+    id: data.id,
+    lat: coord.lat,
+    lon: coord.lon
+  });
 
   setWeatherCards((prev) => {
-    const exists = prev.some((card) => card.tz_id === tzId);
+    const exists = prev.find((card) => card.id === data.id);
+
     return exists
       ? prev.map((card) =>
-          card.tz_id === tzId
-            ? { ...card, data: geoWeather }
-            : card
+          card.id === data.id ? { ...card, data } : card
         )
-      : [...prev, { city: "geo", data: geoWeather, tz_id: tzId }];
+      : [...prev, { city: "geo", data, id: data.id }];
   });
 };
 
-// هندل Current
+
+
+/* ================= CURRENT ================= */
 const GetCurrentSearch = ({ currentWeather, setWeatherCards }) => {
   if (!currentWeather?.data) return;
 
-  Object.entries(currentWeather.data).forEach(([cityName, weatherData]) => {
-    const tzId = weatherData.location?.tz_id;
+  Object.values(currentWeather.data).forEach((weatherData) => {
+    const { id, name, coord } = weatherData;
+
+    setCityCookie({
+      name,
+      id,
+      lat: coord.lat,
+      lon: coord.lon
+    });
+
     setWeatherCards((prev) => {
-      const exists = prev.find((card) => card.city.toLowerCase() === cityName.toLowerCase());
+      const exists = prev.find(
+        (card) => card.city.toLowerCase() === name.toLowerCase()
+      );
+
       return exists
         ? prev.map((card) =>
-            card.city.toLowerCase() === cityName.toLowerCase()
+            card.city.toLowerCase() === name.toLowerCase()
               ? { ...card, data: weatherData }
               : card
           )
-        : [...prev, { city: cityName, data: weatherData, tz_id: tzId }];
+        : [...prev, { city: name, data: weatherData, id }];
     });
   });
 };
 
-// لود اولیه کارت‌ها
+
+/* ================= LOAD FROM COOKIE ================= */
+
 const ShowCard = ({ dispatch, setWeatherCards }) => {
   const savedCities = getCityCookies();
-  const isLargeScreen = window.innerWidth >= 1024;
 
-  // اگر LG فقط شهر اول رو بگیره
-  const citiesToLoad = isLargeScreen ? savedCities.slice(0, 1) : savedCities;
-
-  citiesToLoad.forEach(({ name, tz_id }) => {
-    const lowerTz = tz_id?.toLowerCase();
-
-    if (lowerTz === "geo") {
+  savedCities.forEach(({ name, id }) => {
+    if (name === "Geo") {
       dispatch(fetchGeoWeather()).then((res) => {
-        const data = res.payload;
-        if (!data) return;
-        setWeatherCards((prev) => {
-          const exists = prev.some((card) => card.tz_id === "geo");
-          return exists ? prev : [...prev, { city: "geo", data, tz_id: "geo" }];
-        });
+        if (!res.payload) return;
+
+        setWeatherCards((prev) =>
+          prev.find((c) => c.id === res.payload.id)
+            ? prev
+            : [...prev, { city: "geo", data: res.payload, id: res.payload.id }]
+        );
       });
-    } else if (name) {
+    } else {
       dispatch(fetchCurrentWeather(name)).then((res) => {
-        const data = res.payload;
-        if (!data) return;
-        setWeatherCards((prev) => {
-          const exists = prev.find((card) => card.tz_id === data.location?.tz_id);
-          return exists ? prev : [...prev, { city: name, data, tz_id: data.location?.tz_id }];
-        });
+        if (!res.payload) return;
+
+        setWeatherCards((prev) =>
+          prev.find((c) => c.id === id)
+            ? prev
+            : [...prev, { city: name, data: res.payload, id }]
+        );
       });
     }
   });
 };
 
-export { GetGeoSearch, GetCurrentSearch, ShowCard };
+
+/* ================= LG SIZE ================= */
+
+const ShowLgSize = ({ dispatch, setWeatherCards }) => {
+  if (window.innerWidth <= 1024) return;
+
+  const [firstCity] = getCityCookies();
+  if (!firstCity || firstCity.name === "Geo") return;
+
+  dispatch(fetchCurrentWeather(firstCity.name)).then((res) => {
+    if (!res.payload) return;
+
+    setWeatherCards((prev) =>
+      prev.find((c) => c.id === res.payload.id)
+        ? prev
+        : [...prev, { city: res.payload.name, data: res.payload, id: res.payload.id }]
+    );
+  });
+};
+
+export { GetGeoSearch, GetCurrentSearch, ShowCard, ShowLgSize };
