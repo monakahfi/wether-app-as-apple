@@ -72,7 +72,7 @@ console.log("lookup =", currentWeather.data[id]);
   // if (currentWeather.error || geoWeather.error  || forecastData.error ) return <p className="text-red-500 mt-4">خطا: </p>;
   console.log("weatherData =", weatherData);
   return (
-    <div className="w-[375px] h-[812px] flex flex-col items-center bg-black py-4 gap-4 max-md:w-auto max-md:h-full z-10">
+    <div className="w-[375px] h-full flex flex-col items-center bg-black py-4 gap-4 max-md:w-auto max-md:h-full z-10">
       <button className="text-white" onClick={() => navigate("/")}>بازگشت</button>
 
       {weatherData?.main && (
